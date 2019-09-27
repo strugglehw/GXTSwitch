@@ -67,13 +67,10 @@
 -(void)layoutSubviews
 {
     [super layoutSubviews];
-    CGFloat width =  CGRectGetWidth(self.bounds);
     CGFloat height = CGRectGetHeight(self.bounds);
     self.layer.cornerRadius = height/2;
-    potView.backgroundColor = self.offColor;
     potView.layer.cornerRadius =  self.dotDiam/2;
-    CGFloat y =  (height-self.dotDiam)/2;
-    potView.frame = CGRectMake(width-self.dotDiam-(self.dotDiam/2), y, self.dotDiam, self.dotDiam);
+    [self adjustView];
 }
 -(IBAction)tapGesture:(UITapGestureRecognizer*)sender
 {
@@ -90,55 +87,62 @@
     self.layer.borderColor = [self.offColor CGColor];
     if (CGRectContainsPoint(rect1, tapPoint)||CGRectContainsPoint(rect2, tapPoint)) {
         finishChange = YES;
-        [self adjustView:tapPoint];
+        [self changeStatus:tapPoint];
     }
 }
 -(void)setIsOn:(BOOL)isOn
 {
     _isOn = isOn;
-    CGFloat width =  CGRectGetWidth(self.bounds);
     CGSize size = self.frame.size;
-    CGPoint point = CGPointZero;
-    if (isOn) {
-         point = CGPointMake(size.width/2+(width/4), 0);
-    }
     CGRect potFrame = potView.frame;
-    if (point.x>size.width/2) {
-        potFrame.origin.x = size.width-self.dotDiam-(self.dotDiam/2);
-        
-        
-        self.layer.borderColor = [self.offColor CGColor];
-        potView.backgroundColor = self.offColor;
-    }else{
-        potFrame.origin.x = self.dotDiam/2;
-  
-        
+    if (potFrame.size.width==0&&potFrame.size.height==0) {
+        CGFloat width =  CGRectGetWidth(self.bounds);
+        CGFloat height = CGRectGetHeight(self.bounds);
+        CGFloat y =  (height-self.dotDiam)/2;
+        potFrame = CGRectMake(width-self.dotDiam-(self.dotDiam/2), y, self.dotDiam, self.dotDiam);
+    }
+    if (isOn) {
+        CGFloat x = size.width-self.dotDiam-(self.dotDiam/2);
+        potFrame.origin.x =  x;
         self.layer.borderColor = [self.onColor CGColor];
         potView.backgroundColor = self.onColor;
+    }else{
+        CGFloat x = self.dotDiam/2;
+        potFrame.origin.x =  x;
+        self.layer.borderColor = [self.offColor CGColor];
+        potView.backgroundColor = self.offColor;
     }
     potView.frame = potFrame;
 }
--(void)adjustView:(CGPoint)point
+-(void)adjustView
 {
     CGSize size = self.frame.size;
     CGRect potFrame = potView.frame;
-    if (point.x>size.width/2) {
+    if (self.isOn) {
         potFrame.origin.x = size.width-self.dotDiam-(self.dotDiam/2);
-        self.isOn = YES;
-        
-        self.layer.borderColor = [self.offColor CGColor];
-        potView.backgroundColor = self.offColor;
-    }else{
-        potFrame.origin.x = self.dotDiam/2;
-        self.isOn = NO;
         
         self.layer.borderColor = [self.onColor CGColor];
         potView.backgroundColor = self.onColor;
+    }else{
+        potFrame.origin.x = self.dotDiam/2;
+        
+        self.layer.borderColor = [self.offColor CGColor];
+        potView.backgroundColor = self.offColor;
+    }
+    potView.frame = potFrame;
+}
+-(void)changeStatus:(CGPoint)point
+{
+    CGSize size = self.frame.size;
+    if (point.x>size.width/2) {
+        self.isOn = YES;
+    }else{
+        self.isOn = NO;
+        
     }
     if (self.changeBlock) {
         self.changeBlock(self.isOn);
     }
-    potView.frame = potFrame;
 }
 -(void)click:(UIControl*)sender
 {
@@ -154,7 +158,7 @@
     CGRect rect2 = CGRectInset(CGRectMake(maxX, y, self.dotDiam, self.dotDiam), -space, -space);
     if (CGRectContainsPoint(rect1, tapPoint)||CGRectContainsPoint(rect2, tapPoint)) {
         finishChange = YES;
-        [self adjustView:tapPoint];
+        [self changeStatus:tapPoint];
     }
 }
 - (BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldReceiveTouch:(UITouch *)touch{
@@ -179,13 +183,13 @@
     }else
     if (guesture.state==UIGestureRecognizerStateRecognized)
     {
-        [self adjustView:point];
+        [self changeStatus:point];
         isPaning = NO;
     }else if (guesture.state==UIGestureRecognizerStateCancelled)
     {
         NSLog(@"%s UIGestureRecognizerStateCancelled",__func__);
         
-        [self adjustView:point];
+        [self changeStatus:point];
         isPaning = NO;
     }else if (guesture.state==UIGestureRecognizerStateChanged)
     {
@@ -207,5 +211,25 @@
         isPaning = YES;
         
     }
+}
+-(void)setOnColor:(UIColor *)onColor
+{
+    _onColor = nil;
+    _onColor = [onColor copy];
+    if (self.isOn) {
+        self.layer.borderColor = [onColor CGColor];
+        potView.backgroundColor = onColor;
+    }
+    [self adjustView];
+}
+-(void)setOffColor:(UIColor *)offColor
+{
+    _offColor = nil;
+    _offColor = [offColor copy];
+    if (!self.isOn) {
+        self.layer.borderColor = [offColor CGColor];
+        potView.backgroundColor = offColor;
+    }
+    [self adjustView];
 }
 @end

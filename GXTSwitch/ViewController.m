@@ -18,10 +18,13 @@
      
     [super viewDidLoad];
     // Do any additional setup after loading the view.
-    GXTSwitch *gxtswitch = [[GXTSwitch alloc] initWithFrame:CGRectZero];
     self.switchView.dotDiam = 20;
     self.switchView.onColor = [UIColor redColor];
     self.switchView.offColor = [UIColor blueColor];
+    self.switchView.isOn = NO;
+    self.switchView.changeBlock = ^(BOOL isOn) {
+        NSLog(@"isOn is %i ",isOn);
+    };
 }
 
 
